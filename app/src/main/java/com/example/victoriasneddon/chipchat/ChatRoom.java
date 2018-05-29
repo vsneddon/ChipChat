@@ -1,8 +1,8 @@
 package com.example.victoriasneddon.chipchat;
 
-/**
- * General Imports
- */
+//**
+// * General Imports
+// */
 import java.net.*;
 import java.io.*;
 import java.security.InvalidKeyException;
@@ -23,32 +23,52 @@ import android.util.Log;
  * @author Andrew Polk
  * @version 0.1
  */
-public class ChatRoom extends AsyncTask<String, Void, String> {
+public class ChatRoom extends AsyncTask<String, String, String> {
+
+    public boolean sendMessage = false;
+    public String message = "";
 
     public interface Listener{
         void setText(String text);
-
     }
 
     private Listener listener;
 
     @Override
     protected String doInBackground(String... params){
-        String popular = "failed init";
-        try{
-            popular = init();
-        }
-        catch(Exception e){
-            Log.d("ChatRoom", "Exception: "+e);
+        switch(params[0]){
+            case "init":
+                String popular = "failed init";
+                try {
+                    popular = init();
+                } catch (Exception e) {
+                    Log.d("ChatRoom", "Exception: " + e);
+                }
+                return popular;
+
+            case "join":
+                boolean joined = false;
+                try{
+                    init();
+                    joined = join(params[1], params[2], params[3]);
+                }catch(Exception e){
+                    Log.d("ChatRoom", "Exception: " + e);
+                }
+                if(joined) {
+                    message("Hello from joined.");
+                    publishProgress("Room: " + params[1] + ", Password: " + params[2] + ", Username: " + params[3]);
+                }else{
+                    publishProgress(errorMessage);
+                }
         }
 
-        return popular;
+        startListener();
+        return "";
     }
 
     @Override
     protected void onPostExecute(String result){
         listener.setText(result);
-        return;
     }
 
     @Override
@@ -57,13 +77,13 @@ public class ChatRoom extends AsyncTask<String, Void, String> {
     }
 
     @Override
-    protected void onProgressUpdate(Void... values){
-
+    protected void onProgressUpdate(String... values){
+        listener.setText(values[0]);
     }
 
-    /***************************************************************************
-     * Public variables
-     ***************************************************************************/
+    //***************************************************************************
+    // * Public variables
+    // ***************************************************************************/
 
     /**Instance of the encryption class*/
     public dataEncrypt DE;
@@ -75,103 +95,49 @@ public class ChatRoom extends AsyncTask<String, Void, String> {
     public boolean kicked = false;
 
     public String errorMessage = "";
-    public int errorType = 0;
 
-    /***************************************************************************
-     * Private variables
-     ***************************************************************************/
+    //***************************************************************************
+     //* Private variables
+     //***************************************************************************/
 
-    private static final    String IP      = "pi1.polklabs.com";   //pi1.polklabs.com
+    //private static final    String IP      = "pi1.polklabs.com";   //pi1.polklabs.com
+    private static final    String IP      = "169.231.45.90";
     private static final    int    PORT    = 3301;          //Server port
     private          String room;                    //Room the user joins
-    private          String username;                //Users username
+    public          String username;                //Users username
     private          String password;
-    private          Socket sock;                    //Socket to server
+    public          Socket sock;                    //Socket to server
 
-    private int setupLevel = 0;//The current state of the connection, forces inorder setup
+    public int setupLevel = 0;//The current state of the connection, forces inorder setup
 
     //Streams
-    // TODO Replace inFromUser with input
-    private final BufferedReader      inFromUser;
-    //private final DataInputStream     input;
     private DataOutputStream    out;
     private DataInputStream     in;
 
-    /***************************************************************************
-     * Main
-     ***************************************************************************/
-
-    /**
-     * TODO: remove exception throw and add try loop
-     * @param args
-     * @throws Exception
-     */
-    /*public static void main(String[] args) throws Exception {
-        ChatRoom chatRoom = new ChatRoom();
-
-        //Run 1 or 2, not both
-        //1.
-        while(true){
-            chatRoom.create();
-        }
-
-        //2.
-        //chatRoom.run();
-    }*/
-
-    /***************************************************************************
-     * Constructor
-     ***************************************************************************/
+    //***************************************************************************
+     //* Constructor
+     //***************************************************************************/
 
     public ChatRoom(final Listener listener){
         this.listener = listener;
         //Generate Private Public key pair
         DE = new dataEncrypt(1024, this);
-        //Input from user
-        inFromUser = new BufferedReader(new InputStreamReader(System.in));
         //input = null;
         Log.d("ChatRoom", "Constructor done");
     }
 
-    /***************************************************************************
-     * Public methods
-     ***************************************************************************/
-
-    /**
-     * TODO REPLACE THIS IN THE ANDROID APP
-     * This is the way that the activity should enter a chat room in general
-     * @throws Exception
-     */
-    public void create() throws Exception{
-        String popular = init();
-        System.out.println(popular);
-
-        System.out.print("Enter chat room name: ");
-        String sRoom = inFromUser.readLine();
-
-        System.out.print("Enter chat room password: ");
-        String sPassword = inFromUser.readLine();
-
-        System.out.print("Enter username: ");
-        String sUsername = inFromUser.readLine();
-
-        if(join(sRoom, sPassword, sUsername)){
-            System.out.println("Success");
-            startListener();
-            startMessenger();
-        }else{
-            System.out.println("Failure: "+errorMessage);
-        }
-    }
+    //***************************************************************************
+     //* Public methods
+     //***************************************************************************/
 
     /**
      *
-     * @param roomString
-     * @param passwordString
-     * @param usernameString
+     * @param roomString name of the room
+     * @param passwordString room password
+     * @param usernameString username
      * @return true means user successfully joined room, false means an error occurred
      */
-    public boolean join(String roomString, String passwordString, String usernameString){
+    private boolean join(String roomString, String passwordString, String usernameString){
         //Setup
         room = roomString;
         password = passwordString;
@@ -265,80 +231,36 @@ public class ChatRoom extends AsyncTask<String, Void, String> {
     }
 
     public void reportUser(String user){
-        try{
-            message("/kick "+user);
-        }catch(IOException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e){
-
-        }
+        message("/kick "+user);
     }
 
     /**
      * Call to send message/command into chat room
      * @param text message to send
      * @return returns false if the socket was closed or connection has not been setup
-     * @throws InvalidKeyException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
-     * @throws IOException
      */
-    public boolean message(String text)
-            throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException{
+    public boolean message(String text) {
 
-        if(setupLevel != 5){
-            errorMessage = "Current SetupLevel: "+setupLevel+", Level 3 required.";
-            return false;
-        }
-
-        while(!closed) {
-            try{
-                if(kicked)
-                    break;
-
-                if(!text.equals("")){
-                    //Check for command from user
-                    if(text.equals("/close")) break;
-                    if(text.charAt(0) == '/'){
-                        out.writeUTF(DE.encryptText(text, true));
-                    }else{
-                        //Send message if message is not empty
-                        if(!text.equals("")){
-                            out.writeUTF(DE.encryptText(username+": "+text));
-                            out.flush();
-                        }
-                    }
-                }
-            }catch(IOException e){
-                System.out.println("::Could not send message. "+e);
-                break;
-            }
-            return true;
-        }
-        sock.close();
         return false;
     }
 
-    /***************************************************************************
-     * Private methods
-     ***************************************************************************/
+    //***************************************************************************
+     //* Private methods
+     //***************************************************************************/
 
     /**
      * Requires setupLevel 0
-     * @return
-     * @throws IOException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
-     * @throws java.security.InvalidKeyException
-     * @throws javax.crypto.IllegalBlockSizeException
-     * @throws javax.crypto.BadPaddingException
+     * @return The popular chat rooms, list in string form
+     * @throws IOException ioException
+     * @throws NoSuchAlgorithmException no such algorithm
+     * @throws InvalidKeySpecException invalid key spec
+     * @throws java.security.InvalidKeyException invalid key
+     * @throws javax.crypto.IllegalBlockSizeException illegal block size ?
+     * @throws javax.crypto.BadPaddingException bad padding, data is the wrong number of bytes
      */
-    public String init() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
+    private String init() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
         errorMessage = "";
         setupLevel = 0;
-
-        if(setupLevel != 0){
-            errorMessage = "Current SetupLevel: "+setupLevel+", Level 0 required.";
-            return "";
-        }
 
         kicked = false;
         closed = false;
@@ -387,97 +309,95 @@ public class ChatRoom extends AsyncTask<String, Void, String> {
      */
     private void connectToServer(){
         //Connect to server
-        while(true){
-            try{
-                sock = new Socket(IP, PORT);
-                break;
-            }catch(UnknownHostException e){
-                //Should never happen
-                System.out.println("::Unknown server host.");
-                System.exit(1);
-            }catch(IOException e){
-                //Happens if server is offline or under high load
-                System.out.println("::Could not connect to server.");
-                System.out.print("::Hit enter to retry connection.");
-                try{
-                    if(!inFromUser.readLine().equals(""))
-                        System.exit(0);
-                }catch(IOException e1){
-                    System.out.println("Input error. "+e1);
-                    System.exit(1);
-                }
-            }
+        try{
+            sock = new Socket(IP, PORT);
+        }catch(UnknownHostException e){
+            //Should never happen
+            Log.d("ChatRoom","::Unknown server host.");
+            System.exit(1);
+        }catch(IOException e){
+            //Happens if server is offline or under high load
+            Log.d("ChatRoom", "::Could not connect to server.");
+            Log.d("ChatRoom", "::Hit enter to retry connection.");
         }
     }
 
     /**
      * Starts a listener thread then waits for input from the user.
      */
-    public void startListener() {
+    private void startListener() {
         if(setupLevel != 5){
             errorMessage = "Current SetupLevel: "+setupLevel+", Level 3 required.";
             return;
         }
 
-        //Thread listener = new Thread(new client(this, in));
-        //listener.start();
-    }
+        String message;
+        boolean waitingForKeys = false;
 
-    /*
-     * TODO DELETE THIS IN THE ANDROID APP
-     */
-    private void startMessenger()
-            throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
-
-        if(setupLevel != 5){
-            errorMessage = "Current SetupLevel: "+setupLevel+", Level 3 required.";
-            return;
-        }
-
-        //Message(s) to the user
-        System.out.println("::Type \"/close\" to close connection.\n");
-        //TODO: add other funtions for user.
-        //----------------------
-
-        //Wait for input from the user
-        while(!closed) {
+        while(true){
             try{
-                String send = inFromUser.readLine();
-
-                if(kicked)
-                    break;
-
-                if(!send.equals("")){
-                    //Check for command from user
-                    if(send.equals("/close")) break;
-                    if(send.charAt(0) == '/'){
-                        out.writeUTF(DE.encryptText(send, true));
-                    }else{
-                        //Send message if message is not empty
-                        if(!send.equals("")){
-                            out.writeUTF(DE.encryptText(username+": "+send));
-                            out.flush();
+                message = DE.decryptText(in.readUTF());
+                //Server updating keys
+                String[] split = message.split(":", 2);
+                if(split[0].equals("Server") && split.length > 1){
+                    if(waitingForKeys){
+                        if(!split[0].equals("*")){
+                            DE.userKeys.clear();
+                            int length = DE.getPublicKey().length();
+                            String publicKeys = split[1];
+                            for(int i = 0; i < users.size(); i++){
+                                DE.addPublicKey(users.get(i), publicKeys.substring(i*length, (i+1)*length));
+                            }
                         }
+                        waitingForKeys = false;
                     }
+                    else if(split[1].charAt(0) == '/'){
+                        char temp = split[1].charAt(1);
+                        split[1] = split[1].substring(2);
+                        switch(temp){
+                            case '*':
+                                users.clear();
+                                users.addAll(Arrays.asList(split[1].split(";")));
+                                waitingForKeys = true;
+                                break;
+                            case '-':
+                                kicked = true;
+                                return;
+                        }
+                    }else {
+                        //onProgressUpdate
+                        publishProgress("\r"+message);
+                        //System.out.println("\r"+message);
+                    }
+                }else{
+                    //onProgressUpdate
+                    publishProgress("\r"+message);
+                    Log.d("ChatRoom", message);
+                    //System.out.println("\r"+message);
                 }
             }catch(IOException e){
-                System.out.println("::Could not send message. "+e);
+                publishProgress("::The connection has been closed.");
+                //System.out.println("::The connection has been closed.");
                 break;
+            }catch(NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e){
+                publishProgress("::Could not receive massage.");
+                //System.out.println("::Could not receive message.");
             }
         }
-        closed = false;
-        kicked = false;
-        sock.close();
     }
 
-    /***************************************************************************
-     * Static methods
-     ***************************************************************************/
+    public DataOutputStream getOut(){
+        return this.out;
+    }
+
+    //***************************************************************************
+     //* Static methods
+     //***************************************************************************/
 
     /**
      * Check if a string contains any of the illegal characters
-     * @param string
-     * @return
+     * @param string String to check if valid
+     * @return true if the username/room name is valid
      */
     public static boolean isValid(String string){
         String[] invalidChars = {";"," ", "/"};

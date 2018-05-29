@@ -1,8 +1,8 @@
 package com.example.victoriasneddon.chipchat;
 
-/**
- * For public private key gen and encryption
- */
+//**
+// * For public private key gen and encryption
+// */
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -18,16 +18,16 @@ import javax.crypto.NoSuchPaddingException;
 import org.apache.commons.codec.binary.ApacheBase64;
 import java.security.spec.InvalidKeySpecException;
 
-/**
- * For password authentication
- */
+//**
+// * For password authentication
+// */
 import java.security.spec.KeySpec;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-/**
- * General Imports
- */
+//**
+// * General Imports
+// */
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,35 +40,35 @@ import java.io.UnsupportedEncodingException;
  */
 public final class dataEncrypt {
 
-    /***************************************************************************
-     * Public variables
-     ***************************************************************************/
+    //***************************************************************************
+    // * Public variables
+    // ***************************************************************************/
 
     /**Public key for this client*/
-    public PublicKey                publicKey;
+    private PublicKey                publicKey;
     /**Dictionary of the public keys of the other users*/
     public Map<String, PublicKey>   userKeys = new HashMap<>();
 
-    public static final String ALGORITHM = "RSA";
-    public static final String CIPHER_ALGORITHM = "RSA/ECB/PKCS1Padding";
+    private static final String ALGORITHM = "RSA";
+    private static final String CIPHER_ALGORITHM = "RSA/ECB/PKCS1Padding";
 
-    /***************************************************************************
-     * Private variables
-     ***************************************************************************/
+    //***************************************************************************
+    // * Private variables
+    // ***************************************************************************/
 
     private KeyPairGenerator    keyGen;
     private PrivateKey          privateKey; //Users private key, NEVER SHARE
     private Cipher              cipher;
     private ChatRoom            parent;
 
-    /***************************************************************************
-     * Constructor
-     ***************************************************************************/
+    //***************************************************************************
+    // * Constructor
+    // ***************************************************************************/
 
     /**Constructor
      * Initializes the encryption and creates keys
      * @param keyLength How long the encryption is, STD=1024
-     * @param parent
+     * @param parent the instance that called this class
      */
     public dataEncrypt(int keyLength, ChatRoom parent) {
         this.parent = parent;
@@ -89,14 +89,14 @@ public final class dataEncrypt {
         }
     }
 
-    /***************************************************************************
-     * Public methods
-     ***************************************************************************/
+    //***************************************************************************
+    // * Public methods
+    // ***************************************************************************/
 
     /**Converts the current users public key to a string
      * @return the string representation of the users public key
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
+     * @throws NoSuchAlgorithmException no such algorithm
+     * @throws InvalidKeySpecException invalid key spec
      */
     public String getPublicKey()
             throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -107,8 +107,8 @@ public final class dataEncrypt {
     /**Puts a public key into the user Dictionary based on a username string
      * @param username name of the user to be inserted, NOT SELF
      * @param key The string representation of another users public key
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
+     * @throws NoSuchAlgorithmException no such algorithm
+     * @throws InvalidKeySpecException .
      */
     public void addPublicKey(String username, String key)
             throws NoSuchAlgorithmException, InvalidKeySpecException{
@@ -129,9 +129,9 @@ public final class dataEncrypt {
      * Doubly encrypts the bytes to send for the server
      * @param bytes the bytes to be encrypted
      * @return The string of the encrypted bytes
-     * @throws InvalidKeyException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
+     * @throws InvalidKeyException .
+     * @throws IllegalBlockSizeException .
+     * @throws BadPaddingException .
      */
     public String encryptBytes(byte[] bytes)
             throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -140,12 +140,12 @@ public final class dataEncrypt {
     }
 
     /**
-     * @param msg
-     * @param forServer
-     * @return
-     * @throws java.security.InvalidKeyException
-     * @throws javax.crypto.IllegalBlockSizeException
-     * @throws javax.crypto.BadPaddingException
+     * @param msg string message
+     * @param forServer is it for the server
+     * @return .
+     * @throws java.security.InvalidKeyException .
+     * @throws javax.crypto.IllegalBlockSizeException .
+     * @throws javax.crypto.BadPaddingException .
      */
     public String encryptText(String msg, boolean forServer)
             throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -160,9 +160,9 @@ public final class dataEncrypt {
     /**Doubly encrypts a string of text to be sent to the server
      * @param msg the string to be encrypted
      * @return the encrypted string
-     * @throws InvalidKeyException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
+     * @throws InvalidKeyException .
+     * @throws IllegalBlockSizeException .
+     * @throws BadPaddingException .
      */
     public String encryptText(String msg)
             throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -176,9 +176,9 @@ public final class dataEncrypt {
      * public key dictionary.
      * @param string The doubly encrypted string that the user received.
      * @return the decrypted data in byte array format
-     * @throws InvalidKeyException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
+     * @throws InvalidKeyException .
+     * @throws IllegalBlockSizeException .
+     * @throws BadPaddingException .
      */
     public byte[] decryptBytes(String string)
             throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -193,10 +193,10 @@ public final class dataEncrypt {
      * public key dictionary.
      * @param msg the doubly encrypted string that the user received.
      * @return the decrypted data in string format.
-     * @throws InvalidKeyException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
-     * @throws UnsupportedEncodingException
+     * @throws InvalidKeyException .
+     * @throws IllegalBlockSizeException .
+     * @throws BadPaddingException .
+     * @throws UnsupportedEncodingException .
      */
     public String decryptText(String msg)
             throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException {
@@ -205,9 +205,9 @@ public final class dataEncrypt {
         return new String(decrypt(one, false), "UTF-8");
     }
 
-    /***************************************************************************
-     * Private methods
-     ***************************************************************************/
+    //***************************************************************************
+    // * Private methods
+    // ***************************************************************************/
 
     //Creates a private public key pair
     private void createKeys() {
@@ -251,8 +251,8 @@ public final class dataEncrypt {
         return result;
     }
 
-    //Basic decrypt function that can take in an arbritrary lenght and return bytes
-    public byte[] decrypt(String string, boolean usePrivateKey)
+    //Basic decrypt function that can take in an arbitrary length and return bytes
+    private byte[] decrypt(String string, boolean usePrivateKey)
             throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
         if(usePrivateKey){
@@ -292,15 +292,15 @@ public final class dataEncrypt {
         return result;
     }
 
-    /***************************************************************************
-     * Static methods
-     ***************************************************************************/
+    //***************************************************************************
+    // * Static methods
+    // ***************************************************************************/
 
     /**Converts a public key to a string, used when sending public key to server.
      * @param pubKey the key to be converted
      * @return the public key as a string
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
+     * @throws NoSuchAlgorithmException .
+     * @throws InvalidKeySpecException .
      */
     public static String PublicKeyToString(PublicKey pubKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException {

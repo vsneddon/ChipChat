@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Chip Chat</string>
+    <string name="title_activity_pre_chat_room">Join Room</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_username">Username</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_sign_in">Join Chat Room</string>
+    <string name="action_sign_in_short">Join</string>
+    <string name="error_invalid_email">This username is invalid</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="title_activity_temp">Temp</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="title_activity_gallery">GalleryActivity</string>
+    <string name="choose_an_image">Choose an image</string>
 </resources>
